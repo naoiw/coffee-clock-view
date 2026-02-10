@@ -2,135 +2,145 @@
 # Canvas Time Art with Exploding Seconds
 # ======================================
 
-canvas = document.getElementById "canvas"
-ctx = canvas.getContext "2d"
-
-# ---- Resize ----
-resize = ->
-  canvas.width  = window.innerWidth
-  canvas.height = window.innerHeight
-
-window.addEventListener "resize", resize
-resize()
-
-center =
-  x: -> canvas.width / 2
-  y: -> canvas.height / 2
-
 TAU = Math.PI * 2
 
-# ---- 時刻由来の色 ----
+# ---- 純粋: 時間成分の抽出 ----
+getTimeComponents = (date) ->
+  h: date.getHours() % 12
+  m: date.getMinutes()
+  s: date.getSeconds() + date.getMilliseconds() / 1000
+  currentSec: Math.floor(date.getSeconds() + date.getMilliseconds() / 1000)
+
+# ---- 純粋: 時刻由来の色 ----
 timeColor = (h, m) ->
   hue = (h * 30 + m * 0.5) % 360
   "hsl(#{hue}, 80%, 60%)"
 
-# ---- 背景フェード（残像用）----
-fade = ->
-  ctx.fillStyle = "rgba(14,14,17,0.25)"
-  ctx.fillRect 0, 0, canvas.width, canvas.height
+# ---- 純粋: 中心座標（canvas から算出）----
+center = (canvas) ->
+  x: -> canvas.width  / 2
+  y: -> canvas.height / 2
 
-# ---- 円リング描画 ----
-drawRing = (radius, ratio, color, width) ->
+# ---- 副作用: リサイズ ----
+resize = (canvas) ->
+  canvas.width  = window.innerWidth
+  canvas.height = window.innerHeight
+
+# ---- 副作用: 背景フェード ----
+fade = (ctx, w, h) ->
+  ctx.fillStyle = "rgba(14,14,17,0.25)"
+  ctx.fillRect(0, 0, w, h)
+
+# ---- 副作用: 円リング描画（引数で依存を明示）----
+drawRing = (ctx, cx, cy, radius, ratio, color, width) ->
   ctx.beginPath()
-  ctx.arc center.x(), center.y(),
-    radius,
-    -Math.PI / 2,
-    TAU * ratio - Math.PI / 2
+  ctx.arc(cx, cy, radius, -Math.PI / 2, TAU * ratio - Math.PI / 2)
   ctx.strokeStyle = color
   ctx.lineWidth = width
   ctx.lineCap = "round"
   ctx.stroke()
 
 # =========================
-# 秒粒子（破裂用）
+# 秒粒子（不変データ + 純粋関数）
 # =========================
 
-class Particle
-  constructor: (@x, @y, angle, @color) ->
-    speed = 2 + Math.random() * 4
-    spread = (Math.random() - 0.5) * 0.4
-    a = angle + spread
-    @vx = Math.cos(a) * speed
-    @vy = Math.sin(a) * speed
-    @life = 60
+# 純粋: 1 粒子の生成
+createParticle = (x, y, angle, color) ->
+  speed = 2 + Math.random() * 4
+  spread = (Math.random() - 0.5) * 0.4
+  a = angle + spread
+  { x, y, color, life: 60,
+    vx: Math.cos(a) * speed
+    vy: Math.sin(a) * speed }
 
-  update: ->
-    @x += @vx
-    @y += @vy
-    @life--
+# 純粋: 1 粒子の 1 フレーム更新（新オブジェクトを返す）
+updateParticle = (p) ->
+  { x: p.x + p.vx, y: p.y + p.vy, vx: p.vx, vy: p.vy, color: p.color, life: p.life - 1 }
 
-  draw: ->
-    alpha = @life / 60
-    ctx.fillStyle = @color.replace(")", ", #{alpha})").replace("hsl", "hsla")
-    ctx.beginPath()
-    ctx.arc @x, @y, 2.5, 0, TAU
-    ctx.fill()
+# 純粋: 生存判定
+isAlive = (p) -> p.life > 0
 
-  alive: ->
-    @life > 0
+# 副作用: 1 粒子の描画
+drawParticle = (ctx, p) ->
+  alpha = p.life / 60
+  fill = p.color.replace(")", ", #{alpha})").replace("hsl", "hsla")
+  ctx.fillStyle = fill
+  ctx.beginPath()
+  ctx.arc(p.x, p.y, 2.5, 0, TAU)
+  ctx.fill()
 
-particles = []
-lastSec = null
+# 純粋: 00秒用の破裂粒子リストを生成（中心・色から）
+createExplosionParticles = (cx, cy, color) ->
+  (createParticle(
+    cx + Math.cos(TAU * i / 60 - Math.PI / 2) * 220,
+    cy + Math.sin(TAU * i / 60 - Math.PI / 2) * 220,
+    TAU * i / 60 - Math.PI / 2,
+    color
+  ) for i in [0...60])
 
-# ---- 現在秒の粒子（通常表示）----
-drawSecondDots = (sec) ->
-  count = Math.floor sec
+# ---- 副作用: 現在秒のドット描画 ----
+drawSecondDots = (ctx, cx, cy, sec) ->
+  count = Math.floor(sec)
   for i in [0...count]
     angle = TAU * i / 60 - Math.PI / 2
     r = 220
-    x = center.x() + Math.cos(angle) * r
-    y = center.y() + Math.sin(angle) * r
+    x = cx + Math.cos(angle) * r
+    y = cy + Math.sin(angle) * r
     ctx.fillStyle = "rgba(255,255,255,0.6)"
     ctx.beginPath()
-    ctx.arc x, y, 2, 0, TAU
+    ctx.arc(x, y, 2, 0, TAU)
     ctx.fill()
 
-# ---- 00秒で破裂 ----
-explodeSeconds = (color) ->
-  for i in [0...60]
-    angle = TAU * i / 60 - Math.PI / 2
-    r = 220
-    x = center.x() + Math.cos(angle) * r
-    y = center.y() + Math.sin(angle) * r
-    particles.push new Particle x, y, angle, color
+# ---- 純粋: 00秒になったか（前の秒から 0 に変わったか）----
+shouldExplode = (prevSec, currentSec) ->
+  prevSec? and prevSec isnt currentSec and currentSec is 0
 
 # =========================
-# メインループ
+# メイン: 1 フレーム（state を受け取り新しい state を返す）
 # =========================
+tick = (ctx, canvas, state) ->
+  { lastSec, particles } = state
+  c = center(canvas)
+  cx = c.x()
+  cy = c.y()
 
-draw = ->
-  fade()
+  fade(ctx, canvas.width, canvas.height)
 
-  now = new Date()
-  h = now.getHours() % 12
-  m = now.getMinutes()
-  s = now.getSeconds() + now.getMilliseconds() / 1000
+  tc = getTimeComponents(new Date())
+  { h, m, s, currentSec } = tc
+  baseColor = timeColor(h, m)
 
-  baseColor = timeColor h, m
+  drawRing(ctx, cx, cy, 120, h / 12, baseColor, 10)
+  drawRing(ctx, cx, cy, 160, m / 60, "rgba(255,255,255,0.7)", 6)
+  drawRing(ctx, cx, cy, 200, s / 60, "rgba(255,255,255,0.4)", 3)
 
-  # ---- リング ----
-  drawRing 120, h / 12, baseColor, 10
-  drawRing 160, m / 60, "rgba(255,255,255,0.7)", 6
-  drawRing 200, s / 60, "rgba(255,255,255,0.4)", 3
+  nextParticles = if shouldExplode(lastSec, currentSec)
+    particles.concat createExplosionParticles(cx, cy, baseColor)
+  else
+    particles
 
-  currentSec = Math.floor s
+  drawSecondDots(ctx, cx, cy, s) unless currentSec is 0
 
-  # ---- 00秒検出 → 破裂 ----
-  if lastSec? and lastSec isnt currentSec and currentSec is 0
-    explodeSeconds baseColor
+  updated = (updateParticle(p) for p in nextParticles)
+  updated.forEach((p) -> drawParticle(ctx, p))
+  aliveParticles = updated.filter(isAlive)
 
-  # ---- 秒粒子（通常）----
-  drawSecondDots s unless currentSec is 0
+  { lastSec: currentSec, particles: aliveParticles }
 
-  # ---- 破裂粒子 ----
-  for p in particles
-    p.update()
-    p.draw()
+# ---- 初期化・ループ（状態は閉包で保持）----
+run = ->
+  canvas = document.getElementById("canvas")
+  ctx = canvas.getContext("2d")
 
-  particles = particles.filter (p) -> p.alive()
+  window.addEventListener("resize", -> resize(canvas))
+  resize(canvas)
 
-  lastSec = currentSec
-  requestAnimationFrame draw
+  state = { lastSec: null, particles: [] }
 
-# ---- Start ----
-draw()
+  loop = ->
+    state = tick(ctx, canvas, state)
+    requestAnimationFrame(loop)
+
+  loop()
+
+run()
