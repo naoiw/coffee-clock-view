@@ -109,7 +109,7 @@ lastSecond = null
 # ----------------------------
 # ループ
 # ----------------------------
-loop = ->
+tick = ->
   now = new Date()
   sec = now.getSeconds()
 
@@ -139,6 +139,6 @@ loop = ->
     f.draw()
     f.life > 0
 
-  requestAnimationFrame loop
+  requestAnimationFrame tick
 
-loop()
+tick()
