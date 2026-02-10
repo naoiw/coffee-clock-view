@@ -1,0 +1,15 @@
+{
+  "name": "coffee-clock-view",
+  "version": "1.0.0",
+  "description": "CoffeeScriptを触ってみたかっただけ",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "build": "node -e \"require('fs').mkdirSync('dist',{recursive:true})\" && coffee -c -o dist src/clock.coffee",
+    "serve": "pnpx serve . -p 3000",
+    "start": "pnpm run build && pnpm run serve"
+  },
+  "devDependencies": {
+    "coffeescript": "^2.7.0",
+    "serve": "^14.2.4"
+  }
+}
