@@ -1,12 +1,22 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>Clock</title>
+  <meta charset="UTF-8" />
+  <title>CoffeeScript Time Art</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #0e0e11;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
 </head>
 <body>
-  <h1>現在時刻</h1>
-  <div id="clock">---</div>
+  <canvas id="canvas"></canvas>
 
   <script src="dist/clock.js"></script>
 </body>
