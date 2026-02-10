@@ -137,10 +137,10 @@ run = ->
 
   state = { lastSec: null, particles: [] }
 
-  loop = ->
+  animate = ->
     state = tick(ctx, canvas, state)
-    requestAnimationFrame(loop)
+    requestAnimationFrame(animate)
 
-  loop()
+  animate()
 
 run()
