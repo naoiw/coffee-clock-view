@@ -29,8 +29,8 @@ pnpm run check   # ビルドとテスト
 ## 開発・リリース
 
 1. 通常の実装は `develop` で進めます。必要なら `develop` から feature ブランチを作成します。
-2. Pull Requestではビルド・テストを自動実行します。
-3. `develop` または `main` への push で両ブランチをビルド・テストし、GitHub Pagesに再公開します。
+2. Pull Requestはビルド・テストのみで、公開しません。
+3. `develop` へのpush後、検証に成功した場合にmain側のワークフローからPagesを公開します。mainへのpushでも両ブランチをビルド・テストして公開します。
 4. テスト版の確認後、**develop → main の Pull Request** で本番に反映します。`main` に直接 push せず、`develop` はマージ後も残します。
 
 ## ディレクトリ構成
@@ -38,7 +38,8 @@ pnpm run check   # ビルドとテスト
 - `index.html` — 公開ページの入口。GitHub Pages の構成上、ルートに置きます。
 - `src/` — CoffeeScriptとCSSのソース。
 - `tests/` — CoffeeScriptによる自動テスト。
-- `.github/workflows/deploy_pages.yml` — PRのCI・本番とテストのデプロイを統合したワークフロー。
+- `.github/workflows/validate-develop.yml` — develop pushとPRの検証。
+- `.github/workflows/deploy-pages.yml` — main側から本番とテストをまとめて公開。
 - `package.json` / `pnpm-lock.yaml` — スクリプトと依存関係。ロックファイルは再現可能なビルドのため維持します。
 - `docs/architecture.md` — 描画・状態管理・公開構成の詳細設計。
 
