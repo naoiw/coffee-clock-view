@@ -40,4 +40,4 @@ GitHub Pages の公開物は `_site/index.html` と `_site/develop/index.html` �
 
 ページ内の JS と CSS を相対パスで参照するため、どちらも同じ構造の HTML が利用できます。ビルド時の権限は読み取りのみ、デプロイ時は Pages 書き込み権限に限定します。
 
-**初回設定**: リポジトリ Settings → Pages の Source を GitHub Actions にしておく必要があります。`github-pages` 環境のデプロイ保護ルールが main のみを許可している場合、develop も許可してください。
+**公開環境**: main のデプロイには `github-pages`、develop からのデプロイには `github-pages-preview` 環境を使用します。`github-pages` の本番用ブランチ制限を緩める必要はありません。GitHub Pages の Source は GitHub Actions に設定します。
