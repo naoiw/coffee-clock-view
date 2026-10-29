@@ -1,45 +1,62 @@
 # Coffee Clock
 
-**CoffeeScript** と HTML Canvas で作ったブラウザ時計です。時・分・秒のリング、時刻によって変化する色、毎分の粒子エフェクトを表示します。スマートフォン、HiDPI、動きを減らすOS設定にも対応しています。
+CoffeeScript と HTML Canvas で作ったブラウザ時計です。時刻の変化をリングとアニメーションで表現します。
 
-このプロジェクトのルールは、**アプリケーションのロジックを CoffeeScript で書くこと**です。React や TypeScript などへの移行は前提にしていません。
+## 主な機能
+
+- 時・分・秒を3本のリングで表示
+- 時刻に合わせて変化する配色
+- 毎分の切り替わりに発生する粒子エフェクト
+- デジタル時刻と日付の表示
+- スマートフォン・高解像度ディスプレイ対応、動きを減らすOS設定への対応
 
 ## 公開先
 
-| ブランチ | 用途 | URL |
+| 環境 | ブランチ | URL |
 | --- | --- | --- |
-| main | 本番 | https://naoiw.github.io/coffee-clock-view/ |
-| develop | 開発・テスト | https://naoiw.github.io/coffee-clock-view/develop/ |
+| 本番 | `main` | https://naoiw.github.io/coffee-clock-view/ |
+| 開発プレビュー | `develop` | https://naoiw.github.io/coffee-clock-view/develop/ |
 
-GitHub Pages は1つのサイトに両ブランチのビルド結果を配置します。develop を更新しても、本番の実装は main の内容を使います。
+本番とプレビューは、1つの GitHub Pages サイト（`github-pages` 環境）内の別々のパスで公開します。
 
-## ローカルで動かす
+## 技術スタック
 
-Node.js 22 / pnpm 9 を使用します。
+- **CoffeeScript 2** — アプリケーションロジック（このプロジェクトの実装ルール）
+- **HTML / CSS / Canvas API** — 画面構成・描画
+- **Node.js 22 / pnpm 9** — 開発・ビルド
+- **GitHub Actions / GitHub Pages** — テスト・デプロイ
+
+## ローカル開発
 
 ```bash
 corepack enable
 pnpm install --frozen-lockfile
-pnpm run dev     # ビルドして http://localhost:3000 を起動
-pnpm run check   # ビルドとテスト
+pnpm dev    # ビルドして http://localhost:3000 で起動
+pnpm test   # 自動テスト
+pnpm build  # 本番用ファイルを dist/ に生成
 ```
 
-`pnpm run dev` はファイル変更の自動監視を行いません。ソースを変更したら再度 `pnpm run build` を実行してください。生成物（`dist/`）はコミットしません。
+`pnpm dev` はファイル変更を自動監視しません。変更後は `pnpm build` を再実行してください。生成物（`dist/`）は Git 管理対象外です。
 
-## 開発・リリース
+## ブランチ運用
 
-1. 通常の実装は `develop` で進めます。必要なら `develop` から feature ブランチを作成します。
-2. Pull Requestはビルド・テストのみで、公開しません。
-3. `develop` へのpush後、検証に成功した場合にmain側のワークフローからPagesを公開します。mainへのpushでも両ブランチをビルド・テストして公開します。
-4. テスト版の確認後、**develop → main の Pull Request** で本番に反映します。`main` に直接 push せず、`develop` はマージ後も残します。
+1. 通常の実装・修正は `develop` で行い、`main` は本番用として維持します。
+2. Pull Request ではテストとビルドを実行し、デプロイは行いません。
+3. `develop` への push は検証成功後、`main` 側のワークフローから開発プレビューに反映します。
+4. 本番反映は **`develop` → `main` の Pull Request** で行います。マージ後も `develop` は削除せず、`main` と同期して使い続けます。
 
 ## ディレクトリ構成
 
-- `index.html` — 公開ページの入口。GitHub Pages の構成上、ルートに置きます。
-- `src/` — CoffeeScriptとCSSのソース。
-- `tests/` — CoffeeScriptによる自動テスト。
-- `.github/workflows/validate-develop.yml` — develop pushとPRの検証。
-- `.github/workflows/deploy-pages.yml` — main側から本番とテストをまとめて公開。
-- `package.json` / `pnpm-lock.yaml` — スクリプトと依存関係。ロックファイルは再現可能なビルドのため維持します。
-- `docs/architecture.md` — 描画・状態管理・公開構成の詳細設計。
+- `index.html` — 画面のエントリポイント
+- `src/` — CoffeeScript の処理と CSS
+- `tests/` — 自動テスト
+- `.github/workflows/` — 検証・GitHub Pages デプロイ設定
+- `docs/` — 設計ドキュメント
 
+## ドキュメント
+
+- [設計・デプロイ構成](docs/architecture.md)
+
+## ライセンス
+
+[MIT License](LICENSE)
