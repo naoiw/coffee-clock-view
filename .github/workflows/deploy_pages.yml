@@ -74,7 +74,7 @@ jobs:
       pages: write
       id-token: write
     environment:
-      name: github-pages
+      name: ${{ github.ref_name == 'main' && 'github-pages' || 'github-pages-preview' }}
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy site
