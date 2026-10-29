@@ -1,23 +1,23 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <title>CoffeeScript Time Art</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #0e0e11;
-      overflow: hidden;
-    }
-    canvas {
-      display: block;
-    }
-  </style>
-</head>
-<body>
-  <canvas id="canvas"></canvas>
-
-  <script src="dist/clock.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0f18">
+    <meta name="description" content="CoffeeScriptとCanvasで描く、時刻とともに表情が変わる時計。">
+    <title>Coffee Clock — Time in Motion</title>
+    <link rel="stylesheet" href="./dist/styles.css">
+    <script defer src="./dist/clock.js"></script>
+  </head>
+  <body>
+    <main class="clock" aria-label="Coffee Clock">
+      <canvas class="clock__canvas" id="clock-canvas" aria-hidden="true"></canvas>
+      <section class="clock__content" aria-label="現在時刻">
+        <p class="clock__eyebrow">COFFEE CLOCK</p>
+        <h1 class="clock__time" id="digital-time">--:--</h1>
+        <p class="clock__date" id="date-text"></p>
+      </section>
+      <p class="clock__legend" aria-hidden="true">HOURS · MINUTES · SECONDS</p>
+    </main>
+  </body>
 </html>

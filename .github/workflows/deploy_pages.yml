@@ -1,40 +1,82 @@
-name: Deploy Pages
+name: Deploy GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [main, develop]
+  workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
+
+concurrency:
+  group: coffee-clock-pages
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - name: Checkout production branch
+        uses: actions/checkout@v4
         with:
-          node-version: 20
+          ref: main
+          path: production
 
-      - run: npm install -g coffeescript
-
-      - run: |
-          mkdir -p dist
-          coffee -c -o dist src/clock.coffee
-
-      - uses: actions/upload-pages-artifact@v3
+      - name: Checkout preview branch
+        uses: actions/checkout@v4
         with:
-          path: .
+          ref: develop
+          path: preview
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - name: Build production
+        working-directory: production
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
+
+      - name: Build preview and run tests
+        working-directory: preview
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run check
+
+      - name: Assemble production and preview
+        run: |
+          mkdir -p _site/dist _site/develop/dist
+          cp production/index.html _site/index.html
+          cp -R production/dist/. _site/dist/
+          cp preview/index.html _site/develop/index.html
+          cp -R preview/dist/. _site/develop/dist/
+          touch _site/.nojekyll
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
-      name: github-pages
+      name: ${{ github.ref_name == 'main' && 'github-pages' || 'github-pages-preview' }}
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: deployment
+      - name: Deploy site
+        id: deployment
         uses: actions/deploy-pages@v4
