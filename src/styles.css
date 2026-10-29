@@ -1,0 +1,50 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+* { box-sizing: border-box; }
+html, body { width: 100%; height: 100%; margin: 0; }
+body { background: #0b0f18; color: #eef3ff; overflow: hidden; }
+.clock { position: relative; width: 100%; min-height: 100svh; overflow: hidden; isolation: isolate; }
+.clock::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 48%, rgba(63, 98, 145, .11), transparent 46%);
+  pointer-events: none; z-index: 1;
+}
+.clock__canvas { display: block; position: absolute; inset: 0; }
+.clock__content {
+  position: absolute; z-index: 2; inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  width: 100%; text-align: center; pointer-events: none;
+}
+.clock__eyebrow {
+  font-size: clamp(.55rem, 1.6vw, .72rem); letter-spacing: .3em;
+  font-weight: 600; color: #93a6c4; margin: 0 0 1rem .3em;
+}
+.clock__time {
+  margin: 0; font-size: clamp(2.25rem, 8.5vw, 4rem);
+  font-weight: 300; line-height: 1.1; letter-spacing: -.04em;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 35px rgba(143, 190, 240, .16);
+}
+.clock__date {
+  margin: .85rem 0 0; font-size: clamp(.65rem, 1.65vw, .82rem);
+  color: #a5b5cc; letter-spacing: .05em;
+}
+.clock__legend {
+  position: absolute; bottom: max(1.5rem, env(safe-area-inset-bottom));
+  left: 0; right: 0; text-align: center;
+  font-size: .64rem; letter-spacing: .22em;
+  color: #7f90a8; z-index: 2;
+}
+@media (max-height: 450px) {
+  .clock__eyebrow { margin-bottom: .35rem; }
+  .clock__date { margin-top: .4rem; }
+  .clock__legend { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .clock__time { text-shadow: none; }
+}
