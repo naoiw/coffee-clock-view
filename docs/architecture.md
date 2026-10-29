@@ -5,7 +5,7 @@
 アプリは CoffeeScript で実装し、JavaScript のフレームワークやバンドラは使用しません。ビルドは CoffeeScript CLI に任せます。静的 HTML と CSS を利用し、外部の実行時ライブラリには依存しません。
 
 ```text
-index.html              ページの構造
+index.html              ページの構造（Pagesのルートエントリ）
 src/clock.coffee        時刻計算、Canvas描画、アニメーション制御
 src/styles.css          レイアウトと文字組み
 tests/clock.test.coffee 主要な純粋関数のテスト
@@ -31,13 +31,26 @@ dist/                   ビルド生成物（Git 管理対象外）
 
 現状の規模では CoffeeScript を複数モジュールに分割するより、単一のエントリポイントを保つ方が簡潔です。機能が増えて責務が肥大化した時点でモジュール分割とバンドラ導入を検討します（アプリ実装は引き続き CoffeeScript とします）。
 
-## 公開パイプライン
+## CI・公開パイプライン
 
-GitHub Pages の公開物は `_site/index.html` と `_site/develop/index.html` を持つ単一の静的サイトです。Push が main / develop のどちらで発生しても、Actions が各ブランチの最新コミットをチェックアウトしてビルドします。
+`.github/workflows/deploy_pages.yml` はPRの検証とPages公開を一元管理します。
+
+- **Pull Request → main / develop**: 対象のPRのコードをビルドしてテストします。公開はしません。
+- **Push → main / develop、および手動実行**: 各ブランチの最新コミットをチェックアウトしてビルド・テストし、GitHub Pagesへ再デプロイします。
+- 両ブランチの公開物は `_site/index.html` と `_site/develop/index.html` を持つ1つの静的サイトです。HTMLは相対パスでJSとCSSを参照します。
+- 別のPRのCIは独立して実行し、ページ公開は順次処理します。PRの古い検証実行は新しい実行でキャンセルします。
+- ビルド時の権限は読み取りのみ、デプロイ時のみPages書き込み権限を付与します。
+
+公開URL:
 
 - main: `/coffee-clock-view/`
 - develop: `/coffee-clock-view/develop/`
 
-ページ内の JS と CSS を相対パスで参照するため、どちらも同じ構造の HTML が利用できます。ビルド時の権限は読み取りのみ、デプロイ時は Pages 書き込み権限に限定します。
+**公開環境**: main のデプロイには `github-pages`、develop からのデプロイには `github-pages-preview` を使用します。公開元は GitHub Actions です。
 
-**公開環境**: main のデプロイには `github-pages`、develop からのデプロイには `github-pages-preview` 環境を使用します。`github-pages` の本番用ブランチ制限を緩める必要はありません。GitHub Pages の Source は GitHub Actions に設定します。
+## リポジトリ直下のファイル
+
+- `index.html` はルートURLでのGitHub Pages配信に使用するため、`src/` へ移動しません。
+- `package.json` はCoffeeScriptコンパイル・ローカル配信・テストのスクリプトを定義します。
+- `pnpm-lock.yaml` は依存パッケージのバージョンを固定し、`pnpm install --frozen-lockfile` の再現性を確保します。
+- `LICENSE` は公開リポジトリのライセンス情報です。`README.md` は導入手順、`docs/` は詳細設計に分離します。
