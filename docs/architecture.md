@@ -33,20 +33,21 @@ dist/                   ビルド生成物（Git 管理対象外）
 
 ## CI・公開パイプライン
 
-`.github/workflows/deploy_pages.yml` はPRの検証とPages公開を一元管理します。
+- `.github/workflows/validate-develop.yml`：developへのpush、main/develop宛PRでCoffeeScriptのビルド・テストを実行。PRでは公開しません。
+- `.github/workflows/deploy-pages.yml`：mainへのpush、またはdevelopのpush検証成功による`workflow_run`で実行します。検証失敗やPRの検証結果では公開しません。
+- `workflow_run`では検証済みdevelopコミットSHAをcheckoutします。公開前にmainとdevelopの双方を再テストします。
+- GitHub Pagesは**`github-pages`環境1つのみ**。公開ワークフローはデフォルトブランチmainから実行し、本番用のブランチ制限を維持します。
+- 成果物は`publish/index.html`と`publish/develop/index.html`を持つ1つの静的サイトです。HTMLは相対パスでJS/CSSを参照します。
+- 公開ジョブは直列実行し、検証ジョブは古い実行をキャンセルします。
 
-- **Pull Request → main / develop**: 対象のPRのコードをビルドしてテストします。公開はしません。
-- **Push → main / develop、および手動実行**: 各ブランチの最新コミットをチェックアウトしてビルド・テストし、GitHub Pagesへ再デプロイします。
-- 両ブランチの公開物は `_site/index.html` と `_site/develop/index.html` を持つ1つの静的サイトです。HTMLは相対パスでJSとCSSを参照します。
-- 別のPRのCIは独立して実行し、ページ公開は順次処理します。PRの古い検証実行は新しい実行でキャンセルします。
-- ビルド時の権限は読み取りのみ、デプロイ時のみPages書き込み権限を付与します。
+公開URL：
 
-公開URL:
+- main：`/coffee-clock-view/`
+- develop：`/coffee-clock-view/develop/`
 
-- main: `/coffee-clock-view/`
-- develop: `/coffee-clock-view/develop/`
+GitHub Settings → Pages → SourceはGitHub Actionsにします。`workflow_run`のトリガーを機能させるため、deploy-pages.ymlはmainにも存在する必要があります。
 
-**公開環境**: main のデプロイには `github-pages`、develop からのデプロイには `github-pages-preview` を使用します。公開元は GitHub Actions です。
+以前の`github-pages-preview`環境は今後使用しません。過去のEnvironment履歴はワークフロー変更だけでは削除されないため、不要ならSettings → Environmentsで削除してください。
 
 ## リポジトリ直下のファイル
 
