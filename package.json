@@ -15,5 +15,8 @@
   "devDependencies": {
     "coffeescript": "^2.7.0",
     "serve": "^14.2.4"
+  },
+  "engines": {
+    "node": ">=26 <27"
   }
 }
