@@ -23,13 +23,13 @@ CoffeeScript と HTML Canvas で作ったブラウザ時計です。時刻の変
 
 - **CoffeeScript 2** — アプリケーションロジック（このプロジェクトの実装ルール）
 - **HTML / CSS / Canvas API** — 画面構成・描画
-- **Node.js 22 / pnpm 9** — 開発・ビルド
+- **Node.js 26 / pnpm 9** — 開発・ビルド
 - **GitHub Actions / GitHub Pages** — テスト・デプロイ
 
 ## ローカル開発
 
 ```bash
-corepack enable
+npm install --global pnpm@9.15.0
 pnpm install --frozen-lockfile
 pnpm dev    # ビルドして http://localhost:3000 で起動
 pnpm test   # 自動テスト
